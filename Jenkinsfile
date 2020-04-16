@@ -14,17 +14,17 @@ pipeline {
         timestamps()
     }
     stages {
-        stage("Init step") {
-            when {
-                environment name: 'GIT_TAG_INIT', value: null
-            }
-            steps {
-                sh "git tag -a v0.1 -m \"version 0.1\""
-                sh "git push origin --tags"
-                sh "git checkout -b v0.2-rc1"
-                sh "git push origin v0.2-rc1"
-            }
-        }
+      //  stage("Init step") {
+      //      when {
+      //         environment name: 'GIT_TAG_INIT', value: null
+       //     }
+       //     steps {
+       //         sh "git tag -a v0.1 -m \"version 0.1\""
+      //          sh "git push origin --tags"
+      //         sh "git checkout -b v0.2-rc1"
+       //         sh "git push origin v0.2-rc1"
+      //      }
+     //   }
         stage("Tag step") {
             steps {
 
