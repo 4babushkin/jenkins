@@ -1,0 +1,27 @@
+- name: apt install 
+  hosts: all
+  become: true
+
+  tasks:
+    - name: To Update the cache
+      apt: update_cache=yes
+
+    - name: "APT: Install aptitude package"
+      apt:
+        name: aptitude
+        force_apt_get: yes
+
+    - name: "Установка пакетов"
+      apt: pkg={{ item }} state=present
+      with_items:
+        - vim
+        - curl
+        - mc
+        - htop
+        - mc
+        - tmux
+        - git
+        - python-pip
+
+
+

@@ -1,0 +1,117 @@
+pipeline {
+  agent any
+  stages {
+    stage('Checkout code') {
+
+      steps {
+        script {
+          // Checkout the repository and save the resulting metadata
+          def scmVars = checkout([
+            $class: 'GitSCM',
+            doGenerateSubmoduleConfigurations: false,
+            userRemoteConfigs: [[
+                url: 'git@github.com:4babushkin/jenkins.git',
+                credentialsId: 'github'
+            ]],
+            branches: [ [name: '*/master'] ]
+            ])
+
+          // Display the variable using scmVars
+          echo "scmVars.GIT_COMMIT"
+          echo "${scmVars.GIT_COMMIT}"
+
+          // Displaying the variables saving it as environment variable
+          env.GIT_COMMIT = scmVars.GIT_COMMIT
+          echo "env.GIT_COMMIT"
+          echo "${env.GIT_COMMIT}"
+          // Determine if new version
+//          env.CURRENT_VERSION = "${env.GIT_COMMIT}"
+//          echo "${env.CURRENT_VERSION}"
+//          env.LAST_TAG = sh(returnStdout: true, script: "git describe --abbrev=0").trim()
+//          echo "${env.LAST_TAG}"
+//          env LAST_TAG_COMMIT_HASH = sh(returnStdout: true, script: "git rev-parse '${env.LAST_TAG}^{}'").trim()
+//          echo "${env.LAST_TAH_COMMIT_HASH}"
+//          env.IS_NEW_VERSION = sh(returnStdout: true, script: "if [ ${env.LAST_TAG_COMMIT_HASH} == ${env.CURRENT_VERSION} ]; then echo 'YES'").trim()
+//          echo "${env.IS_NEW_VERSION}"
+
+        }
+      }
+
+    }
+    stage ('Determine if new reviion') {
+      steps {
+        sshagent (credentials: ['githab']) {
+          sh label: 'Check for revision', returnStdout: true, script: 
+          '''
+          CURRENT_VERSION=$(git rev-parse HEAD)
+          LAST_TAG=$(git describe --abbrev=0 | sed 's/^.//')
+          LAST_TAG_COMMIT_HASH=$(git rev-parse v$LAST_TAG^0)
+          NEW_TAG=$(echo $LAST_TAG 0.1 | awk '{print $1 + $2}')
+          FEATURE_BRANCH=$(git for-each-ref --sort=committerdate refs/remotes/origin/ --format='%(refname:short)' | awk -F  "/" '{ print $2  }' | grep rc)
+          echo "---Print Current Feature Branch---"
+          echo $FEATURE_BRANCH
+          FEATURE_BRANCH_REV=$(echo $FEATURE_BRANCH | sed -e \'s/v\\(.*\\)-rc.*/\\1/\')
+          echo "---Print Feature Branch Revision Number---"
+          echo $FEATURE_BRANCH_REV
+          NEW_FEATURE_BRANCH=$(echo $FEATURE_BRANCH_REV 0.1 | awk '{print $1 + $2}')
+          echo "---Print New Feature Branch"
+          echo v$NEW_FEATURE_BRANCH-rc1
+
+          echo "---Current Version---"
+          echo $CURRENT_VERSION
+
+          echo "---Last Tag---"
+          echo v$LAST_TAG
+
+          echo "---Last Tag Hash---"
+          echo $LAST_TAG_COMMIT_HASH
+
+          if [ $CURRENT_VERSION == $LAST_TAG_COMMIT_HASH ]; then
+            echo "Strings are equal, nothing to do"
+          else
+            echo "Strings are not equal, tagging new revision"
+            git tag -a v$NEW_TAG -m 'Jenkins revision v' -m '$NEW_TAG'
+            git push --tags
+            git checkout -b v$NEW_FEATURE_BRANCH-rc1
+            git push origin v$NEW_FEATURE_BRANCH-rc1
+          fi
+          '''
+        }
+      }
+   }
+//    stage("Determine new version") {
+//      when {
+//        branch "master"
+//      }
+
+//      steps {
+//        script {
+//          env.CURRENT_VERSION = sh(returnStdout: true, script: "'${env.GIT_COMMIT}'")
+//          echo "${env.CURRENT_VERSION}"
+//          env.IS_NEW_VERSION = sh(returnStdout: true, script: "[ '${env.DEPLOY_VERSION}' ] && echo 'YES'").trim()
+//        }
+//      }
+
+//    }
+
+//    stage ('Tag last commit') {
+
+//      steps {
+//        sshagent (credentials: ['githab']) {
+//          sh("git tag -a v0.1 -m 'Jenkins'")
+//          sh('git push --tags')
+//          sh ('git checkout -b v0.2-rc1')
+//          sh ('git push origin v0.2-rc1')
+//        }
+//      }   
+//    }
+
+  }
+
+ post { 
+   always { 
+     cleanWs()
+   }
+ }
+  
+}

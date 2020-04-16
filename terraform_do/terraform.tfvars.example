@@ -1,0 +1,10 @@
+public_key_path         = "~/.ssh/appuser.pub"
+public_rebrain_key_path = "../rebrain_key.pub"
+rebrain_key_fingerprint = "xx:xx:xx:57:56:2e:5a:47:85:fb:86:73:ca:b5:90:e7"
+my_key_fingerprint      = "xx:xx:xx:54:8e:2a:54:cb:e4:b4:f2:10:a7:62:30:d8"
+private_key_path        = "~/.ssh/appuser"
+do_token                = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+devs = ["test"]
+image = "ubuntu-18-04-x64"
+size = "s-1vcpu-1gb"
